@@ -1,10 +1,15 @@
 {
+  "name": "prompt-archive-for-ai-chats",
+  "version": "1.0.0",
+  "description": "Browser extension that archives your AI chat prompts locally. Based on Chat Export by Trifall.",
+  "author": "Rahil Qureshi",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "prebuild": "rm -rf dist",
-    "build": "NODE_NO_WARNINGS=1 parcel build --config @parcel/config-webextension",
-    "watch": "NODE_NO_WARNINGS=1 parcel watch --no-hmr --config @parcel/config-webextension",
+    "prebuild": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "parcel build --config @parcel/config-webextension --no-cache",
+    "watch": "parcel watch --no-hmr --config @parcel/config-webextension",
     "check": "run-p check:*",
     "check:typescript": "tsc --noEmit",
     "check:eslint": "eslint .",
@@ -13,7 +18,8 @@
     "fix:eslint": "eslint . --fix",
     "fix:prettier": "prettier --write .",
     "test": "run-p check:* build",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "package": "npm run build && python scripts/package_release.py"
   },
   "dependencies": {
     "clsx": "^2.1.1",

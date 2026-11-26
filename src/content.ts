@@ -1,10 +1,15 @@
 import browser from 'webextension-polyfill';
 
+import { initAutoCapture } from '@/modules/auto-capture';
 import { getChatContent } from '@/modules/chat-content';
+import { archiveExport } from '@/modules/file-operations';
 import { detectSite } from '@/modules/site-detection';
 import { createExportButton } from '@/modules/ui';
 
 console.log(' Content script loaded for', browser.runtime.getManifest().name);
+
+// prompt archive: log each prompt as it is sent
+initAutoCapture();
 
 // listen for messages from popup
 browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -16,6 +21,7 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   ) {
     getChatContent(false)
       .then((result) => {
+        archiveExport(result); // prompt archive: popup exports are filed too
         sendResponse({ success: true, data: result });
       })
       .catch((error: Error) => {
@@ -173,4 +179,6 @@ function init() {
   }, startDelay);
 }
 
-init();
+if (location.hostname !== 'gemini.google.com') {
+  init();
+}

@@ -1,34 +1,49 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest",
-  "name": "Chat Export",
-  "version": "0.0.7",
-  "description": "Export LLM chat conversations to Markdown, XML, JSON, and HTML",
+  "name": "Prompt Archive for AI Chats",
+  "version": "1.0.0",
+  "description": "Automatically archives the prompts you send on ChatGPT, Claude.ai, Gemini and AI Studio to Markdown files on your PC, and exports chats. Developed by Rahil Qureshi; based on Chat Export by Trifall (MIT).",
   "manifest_version": 3,
   "minimum_chrome_version": "121",
   "browser_specific_settings": {
     "gecko": {
-      "id": "chat-export@extension",
+      "id": "prompt-archive@rahilqureshi",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
-        "required": ["none"]
+        "required": [
+          "none"
+        ]
       }
     }
   },
   "icons": {
     "128": "icon.png"
   },
-  "permissions": ["storage", "clipboardWrite", "clipboardRead"],
-  "host_permissions": ["https://chat.openai.com/*", "https://chatgpt.com/*"],
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "clipboardRead",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*"
+  ],
   "content_scripts": [
     {
       "matches": [
         "https://chat.openai.com/*",
         "https://chatgpt.com/*",
         "https://claude.ai/*",
-        "https://aistudio.google.com/*"
+        "https://aistudio.google.com/*",
+        "https://gemini.google.com/*"
       ],
-      "js": ["content.ts"],
-      "css": ["styles/content.css"],
+      "js": [
+        "content.ts"
+      ],
+      "css": [
+        "styles/content.css"
+      ],
       "run_at": "document_end"
     }
   ],
@@ -39,5 +54,12 @@
   "options_ui": {
     "page": "pages/options.html",
     "open_in_tab": true
-  }
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0NIxPbUtC5LI1NuBz7LFQ+UP6Geq2cvE+0zkYdVNwNig+dK7GtoQi3DRRWkfPYwxHyBXvkaDUUorC9Wmf/k3tZpWWWdWPzglgFRBV/zLc2o82RW9uC7LJC2p6T29XJSdxoceClgM8iuD8M6o7uRNfzaBAIaRmXHELmPCqj9DmEvLjhHP7FXIs53hYJFc4seElbRmbMmd7A57vWO/0H+NTCswiRWnDHKWuG0isKKjCnPlGGhCpZ3857h85f/Woll6AyfQitDf7wKR40JSzHd0wFagCUQJePomJNoTKokEeek4dYPG8/9fPJg43AjmJgno8oXfG6rpwkdWNhik67I3swIDAQAB",
+  "background": {
+    "service_worker": "background.ts",
+    "type": "module"
+  },
+  "short_name": "Prompt Archive",
+  "author": "Rahil Qureshi"
 }

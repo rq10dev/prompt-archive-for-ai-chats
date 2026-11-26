@@ -4,6 +4,7 @@ import { getChatGPTChatContent } from '@/modules/chatgpt/chat-content';
 import { getClaudeChatContent } from '@/modules/claude/chat-content';
 import { getGeminiChatContent } from '@/modules/gemini/chat-content';
 
+import { chatTitle } from './auto-capture';
 import { formatContent } from './content-handlers';
 import { detectSite } from './site-detection';
 import { ChatContent, Message } from './types';
@@ -49,6 +50,19 @@ export async function getChatContent(restoreClipboard: boolean = false): Promise
     }
   }
 
-  const formattedContent = await formatContent(messages, format);
-  return { format, content: formattedContent, messageCount: messages.length, failedMessages };
+  const meta = {
+    site,
+    title: chatTitle(),
+    url: window.location.href,
+    exportedAt: new Date().toISOString(),
+  };
+  const formattedContent = await formatContent(messages, format, meta);
+  return {
+    format,
+    content: formattedContent,
+    messageCount: messages.length,
+    failedMessages,
+    messages,
+    meta,
+  };
 }

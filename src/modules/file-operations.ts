@@ -1,6 +1,31 @@
-import { getChatContent } from '@/modules/chat-content';
+import browser from 'webextension-polyfill';
 
-function downloadFile(content: string, format: string): string {
+import { SITE_LABEL, conversationId } from '@/modules/auto-capture';
+import { getChatContent } from '@/modules/chat-content';
+import { ChatContent } from '@/modules/types';
+
+// prompt archive: file the exported chat's prompts in ~/prompt_archive as well
+export function archiveExport({ messages, meta }: ChatContent) {
+  const prompts = messages.filter((m) => m.role !== 'assistant').map((m) => m.content);
+  if (!prompts.length) return;
+  browser.runtime
+    .sendMessage({
+      type: 'ARCHIVE_EXPORT',
+      site: meta.site,
+      project: SITE_LABEL[meta.site],
+      origin: window.location.origin,
+      conv: conversationId(meta.site) ?? `export-${meta.exportedAt}`,
+      url: meta.url,
+      title: meta.title,
+      exportedAt: meta.exportedAt,
+      prompts,
+    })
+    .catch(() => {
+      /* host not installed: the downloaded file is still saved */
+    });
+}
+
+function downloadFile(content: string, format: string, site = 'chat'): string {
   const mimeTypes: { [key: string]: string } = {
     markdown: 'text/markdown',
     json: 'application/json',
@@ -19,7 +44,8 @@ function downloadFile(content: string, format: string): string {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `chat-export-${new Date().toISOString().split('T')[0]}.${extensions[format] || 'txt'}`;
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  a.download = `chat-export-${site}-${stamp}.${extensions[format] || 'txt'}`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -28,7 +54,9 @@ function downloadFile(content: string, format: string): string {
 }
 
 export async function copyToClipboard() {
-  const { format, content, messageCount, failedMessages } = await getChatContent(false);
+  const chat = await getChatContent(false);
+  const { format, content, messageCount, failedMessages } = chat;
+  archiveExport(chat);
 
   const failedText = failedMessages > 0 ? `\n⚠️ Failed messages: ${failedMessages}` : '';
   const stats = `Stats:\n📝 Total messages: ${messageCount}\n📏 Total length: ${content.length.toLocaleString()} characters${failedText}`;
@@ -37,7 +65,7 @@ export async function copyToClipboard() {
   } catch {
     // Clipboard needs a focused page; a long export easily outlives focus.
     // Fall back to a download so the extracted content is never lost.
-    const filename = downloadFile(content, format);
+    const filename = downloadFile(content, format, chat.meta.site);
     alert(
       `⚠️ Clipboard unavailable (page lost focus?) — saved to file instead.\n\n${stats}\n📁 Filename: ${filename}`
     );
@@ -47,8 +75,10 @@ export async function copyToClipboard() {
 }
 
 export async function saveToFile() {
-  const { format, content, messageCount, failedMessages } = await getChatContent(true);
-  const filename = downloadFile(content, format);
+  const chat = await getChatContent(true);
+  const { format, content, messageCount, failedMessages } = chat;
+  archiveExport(chat);
+  const filename = downloadFile(content, format, chat.meta.site);
 
   const failedText = failedMessages > 0 ? `\n⚠️ Failed messages: ${failedMessages}` : '';
   alert(

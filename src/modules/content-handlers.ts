@@ -1,4 +1,4 @@
-import { Message } from './types';
+import { ChatMeta, Message } from './types';
 
 export async function extractFormattedText(element: Element): Promise<string> {
   return new Promise((resolve) => {
@@ -230,7 +230,11 @@ export async function extractFormattedText(element: Element): Promise<string> {
   });
 }
 
-export async function formatContent(messages: Array<Message>, format: string): Promise<string> {
+export async function formatContent(
+  messages: Array<Message>,
+  format: string,
+  meta?: ChatMeta
+): Promise<string> {
   switch (format) {
     case 'markdown':
       return messages
@@ -243,6 +247,7 @@ export async function formatContent(messages: Array<Message>, format: string): P
     case 'json':
       return JSON.stringify(
         {
+          ...(meta ? { meta } : {}),
           messages: messages.map(({ role, content }) => ({
             role: role === 'assistant' ? 'assistant' : 'user',
             content,

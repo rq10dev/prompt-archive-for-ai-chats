@@ -120,8 +120,11 @@ export default function PopupPage() {
     <div id="root" className="min-h-screen !bg-zinc-950 text-zinc-100">
       <div id="container" className="container mx-auto max-w-2xl p-4">
         <div className="space-y-0.5">
-          <h1 className="text-2xl font-bold tracking-tight">Chat Export</h1>
-          <p className="text-sm text-zinc-400">Export your chat from any supported page.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Prompt Archive for AI Chats</h1>
+          <p className="text-sm text-zinc-400">
+            Your prompts are saved automatically to the prompt_archive folder on this PC. Export
+            the open chat below.
+          </p>
         </div>
 
         <div className="mt-4 space-y-4">
@@ -161,6 +164,18 @@ export default function PopupPage() {
             </select>
           </div>
         </div>
+        <p className="mt-6 border-t border-zinc-800 pt-3 text-center text-xs text-zinc-500">
+          Developed by Rahil Qureshi · Based on{' '}
+          <a
+            href="https://github.com/Trifall/chat-export"
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-zinc-300"
+          >
+            Chat Export
+          </a>{' '}
+          by Trifall (MIT License)
+        </p>
       </div>
     </div>
   );

@@ -1,88 +1,119 @@
-# Chat Export Extension (LLM)
+# Prompt Archive for AI Chats
 
-[![Test](https://github.com/Trifall/chat-export/actions/workflows/test.yml/badge.svg)](https://github.com/Trifall/chat-export/actions/workflows/test.yml)
+**Developed by Rahil Qureshi** · Based on [Chat Export](https://github.com/Trifall/chat-export) by Trifall (MIT License)
 
-<p align="center">
-<a href="https://addons.mozilla.org/en-US/firefox/addon/chat-export/"><img src="https://user-images.githubusercontent.com/585534/107280546-7b9b2a00-6a26-11eb-8f9f-f95932f4bfec.png" alt="Get Chat Export for Firefox"></a>
-<a href="https://chromewebstore.google.com/detail/chat-export/nkdibdcomniocannnkofanbikghkpbgl"><img src="https://user-images.githubusercontent.com/585534/107280622-91a8ea80-6a26-11eb-8d07-77c548b28665.png" alt="Get Chat Export for Chromium"></a>
-</p>
+A browser extension for Microsoft Edge and Google Chrome on Windows that **automatically saves every prompt you send** on ChatGPT, Claude.ai, Gemini and Google AI Studio into tidy Markdown files on your own PC, one file per site per month. It can also export whole chats to Markdown, JSON, XML or HTML.
 
----
+```
+%USERPROFILE%\prompt_archive\
+├── index.md                       ← every site/project, with a table of months
+└── projects\
+    ├── ChatGPT\2026-11.md
+    ├── Claude.ai\2026-11.md
+    ├── Gemini\2026-10.md
+    └── Google AI Studio\2026-11.md
+```
 
-This extension allows you to export chat conversations from ChatGPT, Gemini (AI Studio), and Claude to Markdown, XML, JSON, and HTML.
+Each month file lists your chats (with title and link) and every prompt with the date and time you sent it.
 
-The export button is placed next to the share button.
+## Privacy
 
-I made this extension in my free time over a couple days because I wanted this feature and also [this tweet](https://x.com/tylerangert/status/1902038162836246550). Might be scuffed on edge cases but I tried my best.
+- Your prompts **never leave your computer**. The extension hands each prompt to a small helper program on your PC (browser "native messaging"), which writes it into `%USERPROFILE%\prompt_archive`. There are no servers, accounts, analytics or network requests.
+- The extension only runs on `chatgpt.com`, `chat.openai.com`, `claude.ai`, `gemini.google.com` and `aistudio.google.com`.
+- Only the prompts **you** send are archived automatically, not the AI's replies (use **Export** for whole chats).
+- The source code of the extension and the helper is in this repository.
 
-This extension does **NOT** store, upload, or share any data remotely. It does **NOT** store any personal or private/identifiable data. All content is stored on the local machine and the local users's clipboard. Only stores the configuration for the output format (string enum [markdown, html, xml, json] for ease-of-use.
+## Requirements
 
-![Export Video Example](https://github.com/user-attachments/assets/2705e502-9e1f-41a8-88e9-3b41242d6c0f)
+- Windows 10 or 11
+- Microsoft Edge or Google Chrome
+- [Python 3.8 or newer](https://www.python.org/downloads/) (tick "Add python.exe to PATH" when installing)
 
-Extension Settings:
+## Install
 
-![Extension Settings](https://github.com/user-attachments/assets/7a3f11bc-66af-48c6-89ce-2619fd0c34e0)
+1. Download `PromptArchive-<version>.zip` from the [Releases](../../releases) page and **extract** it.
+2. Double-click **`install.cmd`**. It finds Python, copies the files to `%LOCALAPPDATA%\PromptArchive`, and registers the helper with Edge and Chrome for your user account (no admin rights needed).
+3. Load the extension:
+   1. Open `edge://extensions` (or `chrome://extensions`).
+   2. Turn on **Developer mode**.
+   3. Click **Load unpacked** and select `%LOCALAPPDATA%\PromptArchive\extension` (the installer prints the full path).
+4. Reload any open ChatGPT / Claude.ai / Gemini / AI Studio tabs and send a prompt. It appears in `%USERPROFILE%\prompt_archive\projects\<site>\<year>-<month>.md` within a few seconds.
 
-Claude Button:
+## Using it
 
-![Claude Export Button](https://github.com/user-attachments/assets/d2f604bb-f563-4e0c-89a1-276804be1de4)
+| You do | What is archived |
+|---|---|
+| Send a prompt (Enter, Send, or Ctrl+Enter / Run in AI Studio) | The prompt, with the time you sent it, the chat title and its link |
+| Click **Export** next to the chat's Share button (ChatGPT, Claude.ai, AI Studio), or use the toolbar popup | A file in your Downloads, **and** any earlier prompts of that chat that are not in the archive yet, marked *(from export)* |
 
-ChatGPT Button:
+Prompts you already archived are never duplicated.
 
-![ChatGPT Export Button](https://github.com/user-attachments/assets/9a030781-4e8d-47a0-87b2-c15461f08ce4)
+### Import your older Gemini history (Google Takeout)
 
-Gemini AIStudio Button:
+Gemini's own page has no Export button, but Google Takeout has your full history:
 
-![Gemini AIStudio Export Button](https://github.com/user-attachments/assets/404c1304-12ea-4e7a-bcf8-f4ec91faf817)
+1. Go to [takeout.google.com](https://takeout.google.com) → **Deselect all** → tick **My Activity**.
+2. **All activity data included** → select only **Gemini Apps**.
+3. **Multiple formats** → set **Activity records** to **JSON** (the default HTML cannot be imported).
+4. Download the zip and run:
+   ```
+   python "%LOCALAPPDATA%\PromptArchive\export_prompt_history.py" --takeout "C:\path\to\takeout-....zip"
+   ```
+
+Takeout does not say which chat a prompt was in, so imported prompts are grouped by day.
+
+### Claude Code users
+
+If you use [Claude Code](https://claude.com/claude-code), its prompts can go in the same archive (one project per folder you worked in). Run:
+
+```
+python "%LOCALAPPDATA%\PromptArchive\export_prompt_history.py"
+```
+
+Run it again any time; everything it finds is kept even after Claude Code cleans up old sessions.
+
+## Settings
+
+`%USERPROFILE%\prompt_archive\config.json` is created on first run:
+
+```json
+{
+  "index_file": "index.md",
+  "browser_label": "this computer (browser)",
+  "claude_code_sources": [{"path": "~/.claude", "label": "this computer"}],
+  "merge": {}
+}
+```
+
+- **claude_code_sources**: extra Claude Code data folders to read, e.g. an old PC's drive: `{"path": "D:\\Users\\OldName\\.claude", "label": "old laptop"}`.
+- **merge**: file one project folder under another, e.g. the same project on an old PC: `{"C:\\Users\\OldName\\Projects\\App": "C:\\Users\\NewName\\Projects\\App"}`.
+
+Do not delete `prompt_archive\.prompt_store.json`: it holds every prompt ever archived, and the Markdown files are rebuilt from it.
 
 ## Limitations
 
-- **Unsupported Attachments**: Any attachment on any of the supported sites that is not directly linkable or whose text content is not retrievable directly from the browser DOM itself cannot be included in the exported conversation.
-- **Claude Specifics**: Attached text documents in Claude can only be exported if they are previewable/rendered within the chat or artifact viewer. If the file is not previewable, the extension cannot extract its contents because no direct link is available and direct downloading is not supported.
+- Prompts that are only an image or file (no text) are not captured. Large pastes that a site turns into an attachment keep only the text you typed.
+- Editing an earlier message may not be captured on some sites.
+- The extension finds each site's message box and Send button by the page structure; when a site redesigns its page, capture can stop until the extension is updated. Errors are written to `prompt_archive\errors.log`.
+- Windows only (the installer and helper registration are Windows-specific).
 
-## Contributing
+## Uninstall
 
-- If you manage to fix a bug or add a useful feature, pull requests are welcome.
+Double-click **`uninstall.cmd`** (from the release zip), then remove the extension in `edge://extensions`. Your archive folder is kept.
 
-## Getting started
+## Build from source
 
-### 🛠 Build locally
+```
+npm ci
+npm run build          # builds the extension into dist/
+npm run package        # builds and creates release/PromptArchive-<version>.zip
+```
 
-1. Checkout the copied repository to your local machine eg. with `git clone https://github.com/Trifall/chat-export`
-1. Run `npm install` to install all required dependencies
-1. Run `npm run build`
+Load `dist/` with **Load unpacked** while developing. The extension ID is fixed by the `key` in `src/manifest.json`, so the helper's registration keeps working across rebuilds.
 
-The build step will create the `dist` folder, this folder will contain the generated extension.
+## Credits and license
 
-### 🏃 Run the extension
+- **Rahil Qureshi**: Prompt Archive (automatic prompt capture, local archive helper, monthly Markdown archive, Gemini and Google Takeout support, export metadata, installer).
+- **Trifall**: the original [Chat Export](https://github.com/Trifall/chat-export) extension (chat export to Markdown/JSON/XML/HTML for ChatGPT, Claude and AI Studio), on which this is built.
 
-Using [web-ext](https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/) is recommended for automatic reloading and running in a dedicated browser instance. Alternatively you can load the extension manually (see below).
-
-1. Run `npm run watch` to watch for file changes and build continuously
-1. Run `npm install --global web-ext` (only for the first time)
-1. In another terminal, run `web-ext run -t chromium`
-1. Check that the extension is loaded by opening the extension options ([in Firefox](media/extension_options_firefox.png) or [in Chrome](media/extension_options_chrome.png)).
-
-#### Manually
-
-You can also [load the extension manually in Chrome](https://www.smashingmagazine.com/2017/04/browser-extension-edge-chrome-firefox-opera-brave-vivaldi/#google-chrome-opera-vivaldi) or [Firefox](https://www.smashingmagazine.com/2017/04/browser-extension-edge-chrome-firefox-opera-brave-vivaldi/#mozilla-firefox).
-
-### ✏️ Make changes
-
-Firefox will automatically reload content scripts when the extension is updated, Chrome requires you to reload the page to reload the content scripts.
-
-### 📕 Read the documentation
-
-Here are some websites you should refer to:
-
-- [Parcel’s Web Extension transformer documentation](https://parceljs.org/recipes/web-extension/)
-- [Chrome extensions’ API list](https://developer.chrome.com/docs/extensions/reference/)
-- A lot more links in Fregante's [Awesome WebExtensions](https://github.com/fregante/Awesome-WebExtensions) list
-
-## Credits
-
-[See template](https://github.com/sotayamashita/browser-extension-template).
-
-## License
-
-MIT
+Released under the [MIT License](LICENSE).
